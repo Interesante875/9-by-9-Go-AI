@@ -199,6 +199,7 @@ void Search::run(nn::Evaluator& eval, int visits, int batch) {
 int tt_safe_move(const Search& search, int chosen) {
   if (chosen != PASS) return chosen;
   const Board& b = search.root_board();
+  if (b.consecutive_passes() != 1) return PASS;  // the game goes on after our pass
   float v, s;
   terminal_eval(b, &v, &s);  // score of the board as it stands, for the player to move
   if (s > 0) return PASS;

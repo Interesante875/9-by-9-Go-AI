@@ -182,7 +182,13 @@ TEST(training_reduces_loss_on_fixed_data) {
   for (int i = 0; i < 8; ++i) last = tr.train_steps(10);
   CHECK(first.steps == 5 && last.steps == 10);
   CHECK(std::isfinite(last.total));
-  CHECK(last.total < first.total * 0.8);  // memorising a tiny buffer must work
+  std::cout << "  loss " << first.total << " -> " << last.total << " (policy " << first.policy << " -> " << last.policy
+            << ", value " << first.value << " -> " << last.value << ")\n";
+  // Memorising a tiny buffer must work. (Policy cross-entropy has an irreducible floor equal to
+  // the entropy of the search targets, so check the learnable parts: value error and policy KL.)
+  CHECK(last.total < first.total);
+  CHECK(last.value < first.value * 0.5);
+  CHECK(last.kl < first.kl);
   fs::remove_all(dir);
 }
 

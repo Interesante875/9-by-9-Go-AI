@@ -210,7 +210,7 @@ Keyboard: `P` pass · `U` undo · `A` analyze · `Space` AI move.
 
 Scoring follows **area (Chinese / Tromp-Taylor) rules**. After two passes, every stone on the board counts as alive. Capture dead stones before passing, or turn on *Territory* to see what the network thinks is dead.
 
-The AI follows a *Tromp-Taylor-safe pass* rule, both in play and in self-play: it passes only when the board as it stands is a win for it. Otherwise it keeps playing (capturing invaders) instead of passing into a loss.
+The AI follows a *Tromp-Taylor-safe pass* rule, both in play and in self-play. When you have just passed, the AI's pass would end the game, so it only does that if the board as it stands is a win for it. Otherwise it keeps playing (capturing dead stones) instead of passing into a loss.
 
 ---
 

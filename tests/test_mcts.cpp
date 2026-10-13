@@ -129,6 +129,13 @@ TEST(tt_safe_pass) {
   run_uniform(s2, 50);
   CHECK_EQ(mcts::tt_safe_move(s2, PASS), PASS);
   CHECK_EQ(mcts::tt_safe_move(s2, gtp_to_action("A1")), gtp_to_action("A1"));
+  // Opponent has not passed: our pass does not end the game, so it is always allowed.
+  Board c(100.0f);
+  c.play(gtp_to_action("E5"));
+  c.play(gtp_to_action("D5"));
+  mcts::Search s3(cfg, c, 5);
+  run_uniform(s3, 50);
+  CHECK_EQ(mcts::tt_safe_move(s3, PASS), PASS);
 }
 
 TEST(mcts_finished_game_root) {
