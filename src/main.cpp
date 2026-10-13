@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <chrono>
 #include <csignal>
@@ -28,6 +29,10 @@
 #include "train/arena.h"
 #include "train/trainer.h"
 #include "util/log.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -59,8 +64,13 @@ Usage:
                GTP engine for Sabaki / Lizzie / GoGui (supports lz-analyze, kata-analyze).
   go9 match    --a FILE|random --b FILE|random [--games 40] [--sims 100] [--device ...]
                Head-to-head evaluation between two models.
+  go9 play     [--run DIR | --model FILE] [--color black|white] [--visits 400]
+               Play against the AI in the terminal (ASCII board).
+  go9 config   Print the default training configuration (key = value).
   go9 selftest Quick environment sanity check (random games, rules invariants).
   go9 bench    [--model FILE] [--device ...]  Neural-net and MCTS throughput.
+
+Common options: --device auto|cpu|cuda|cuda:N   --threads N (LibTorch CPU threads)
 )";
 }
 
@@ -214,6 +224,50 @@ int cmd_match(const std::vector<std::string>& args) {
   return 0;
 }
 
+int cmd_play(const std::vector<std::string>& args) {
+  using namespace go;
+  auto kv = parse_kv(args, nullptr);
+  auto engine = make_engine(kv);
+  const int visits = std::stoi(get(kv, "visits", "400"));
+  const Color human = get(kv, "color", "black")[0] == 'w' ? WHITE : BLACK;
+  std::cout << "You are " << (human == BLACK ? "Black (X)" : "White (O)")
+            << ". Enter moves like D5, 'pass', 'undo', 'resign' or 'quit'.\n";
+  while (!engine->env().done() && !g_stop) {
+    std::cout << "\n" << engine->env().render();
+    if (engine->env().to_move() == human) {
+      std::cout << "your move> " << std::flush;
+      std::string in;
+      if (!(std::cin >> in) || in == "quit") break;
+      if (in == "undo") {
+        engine->undo();
+        engine->undo();
+        continue;
+      }
+      if (in == "resign") {
+        engine->resign(human);
+        break;
+      }
+      int a = gtp_to_action(in);
+      if (a < 0 || !engine->play(a)) std::cout << "illegal move: " << in << "\n";
+    } else {
+      play::Analysis an;
+      int a = engine->choose_move(visits, true, &an);
+      const float wr = an.to_move == BLACK ? an.winrate_black : 1 - an.winrate_black;
+      if (a == -2) {
+        std::cout << "AI resigns.\n";
+        engine->resign(engine->env().to_move());
+        break;
+      }
+      std::printf("AI plays %s  (AI win rate %.1f%%, score lead %+.1f, %d visits)\n", action_to_gtp(a).c_str(),
+                  100 * wr, an.to_move == BLACK ? an.score_black : -an.score_black, an.visits);
+      engine->play(a);
+    }
+  }
+  std::cout << "\n" << engine->env().render() << "Result: " << engine->env().result_string() << "\n"
+            << engine->env().to_sgf();
+  return 0;
+}
+
 int cmd_selftest() {
   using namespace go;
   std::mt19937_64 rng(2024);
@@ -286,6 +340,11 @@ int cmd_bench(const std::vector<std::string>& args) {
 }  // namespace
 
 int main(int argc, char** argv) {
+#ifdef _WIN32
+  // The MSVC linker drops DLLs whose symbols are never referenced directly; load the CUDA
+  // backend explicitly so torch::cuda::is_available() works with a CUDA build of LibTorch.
+  LoadLibraryA("torch_cuda.dll");
+#endif
   std::signal(SIGINT, on_signal);
 #ifdef SIGTERM
   std::signal(SIGTERM, on_signal);
@@ -300,13 +359,27 @@ int main(int argc, char** argv) {
     return 0;
   }
   std::string cmd = argv[1];
-  std::vector<std::string> args(argv + 2, argv + argc);
+  std::vector<std::string> args;
+  for (int i = 2; i < argc; ++i) {
+    // --threads N: LibTorch CPU threads for any command (useful when several go9 processes share a CPU).
+    std::string a = argv[i];
+    if (a == "--threads" && i + 1 < argc) {
+      torch::set_num_threads(std::max(1, std::atoi(argv[++i])));
+      continue;
+    }
+    args.push_back(a);
+  }
   try {
     if (cmd == "train") return cmd_train(args);
     if (cmd == "gui") return cmd_gui(args);
     if (cmd == "gtp") return cmd_gtp(args);
     if (cmd == "match") return cmd_match(args);
     if (cmd == "selftest") return cmd_selftest();
+    if (cmd == "play") return cmd_play(args);
+    if (cmd == "config") {
+      std::cout << train::TrainConfig().dump();
+      return 0;
+    }
     if (cmd == "bench") return cmd_bench(args);
     usage();
     return cmd == "help" || cmd == "--help" || cmd == "-h" ? 0 : 1;

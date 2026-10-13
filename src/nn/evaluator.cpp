@@ -1,5 +1,6 @@
 #include "nn/evaluator.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 

@@ -58,7 +58,7 @@ const std::vector<std::pair<std::string, Field>>& fields() {
     F(run_dir) F(device) F(seed) F(max_iters) F(torch_threads) F(algo) F(blocks) F(channels) F(komi)
     F(max_moves) F(games_per_iter) F(parallel_games) F(selfplay_threads) F(full_sims) F(fast_sims)
     F(full_prob) F(temp_moves) F(temperature) F(c_puct) F(fpu_reduction) F(noise_eps) F(noise_alpha_total)
-    F(resign_threshold) F(noresign_frac) F(resign_min_moves) F(leaves_per_search) F(optimizer) F(lr)
+    F(resign_threshold) F(noresign_frac) F(resign_min_moves) F(resign_start_iter) F(resign_consecutive) F(leaves_per_search) F(optimizer) F(lr)
     F(lr_min) F(lr_decay_iters) F(weight_decay) F(momentum) F(batch_size) F(sample_reuse) F(min_replay)
     F(max_train_steps) F(grad_clip) F(replay_capacity) F(per_alpha) F(per_beta) F(per_beta_iters)
     F(w_policy) F(w_value) F(w_ownership) F(w_score) F(w_ppo) F(w_entropy) F(ppo_clip) F(gae_lambda)
@@ -133,8 +133,7 @@ bool TrainConfig::load_file(const std::string& path, std::string* error) {
 bool TrainConfig::save_file(const std::string& path) const {
   std::ofstream out(path);
   if (!out) return false;
-  out << "# go9 training configuration (edit and pass with --config, or override with --key value)\n";
-  for (auto& [k, f] : fields()) out << k << " = " << f.get(*this) << "\n";
+  out << dump();
   return bool(out);
 }
 
@@ -163,6 +162,13 @@ bool TrainConfig::apply_args(const std::vector<std::string>& args, std::string* 
     if (!set(key, value, error)) return false;
   }
   return true;
+}
+
+std::string TrainConfig::dump() const {
+  std::ostringstream os;
+  os << "# go9 training configuration. Use with:  go9 train --config <file>  (or override: --key value)\n";
+  for (auto& [k, f] : fields()) os << k << " = " << f.get(*this) << "\n";
+  return os.str();
 }
 
 std::string TrainConfig::summary() const {

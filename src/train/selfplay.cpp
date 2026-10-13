@@ -1,6 +1,8 @@
 #include "train/selfplay.h"
 
+#include <algorithm>
 #include <chrono>
+#include <iterator>
 #include <cmath>
 #include <mutex>
 #include <random>
@@ -104,6 +106,7 @@ struct McSlot {
   bool full = false;
   bool allow_resign = true;
   bool would_resign[3] = {false, false, false};
+  int below[3] = {0, 0, 0};  // consecutive moves with root value under the resign threshold
   std::vector<MoveRecord> recs;
   std::vector<int> moves;
 };
@@ -132,8 +135,9 @@ void SelfPlay::worker_mcts(int thread_id, int n, uint64_t seed, const std::atomi
     s.active = true;
     s.board = Board(cfg_.komi, KoRule::PositionalSuperko, cfg_.max_moves);
     s.search = std::make_unique<mcts::Search>(mc, s.board, rng());
-    s.allow_resign = cfg_.resign_threshold != 0.f && uni(rng) >= cfg_.noresign_frac;
+    s.allow_resign = resign_enabled_ && cfg_.resign_threshold != 0.f && uni(rng) >= cfg_.noresign_frac;
     s.would_resign[BLACK] = s.would_resign[WHITE] = false;
+    s.below[BLACK] = s.below[WHITE] = 0;
     s.recs.clear();
     s.moves.clear();
     begin_search(s);
@@ -199,8 +203,9 @@ void SelfPlay::worker_mcts(int thread_id, int n, uint64_t seed, const std::atomi
       const mcts::Node& root = s.search->root();
       const Color mover = s.board.to_move();
       const float rv = s.search->root_value();
-      if (cfg_.resign_threshold != 0.f && s.board.move_number() >= cfg_.resign_min_moves &&
-          rv < cfg_.resign_threshold) {
+      s.below[mover] = rv < cfg_.resign_threshold ? s.below[mover] + 1 : 0;
+      if (resign_enabled_ && cfg_.resign_threshold != 0.f && s.board.move_number() >= cfg_.resign_min_moves &&
+          s.below[mover] >= std::max(1, cfg_.resign_consecutive)) {
         s.would_resign[mover] = true;
         if (s.allow_resign) {
           finish_game(s, opponent(mover), true);

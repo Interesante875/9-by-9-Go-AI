@@ -1,14 +1,17 @@
 // Local HTTP server for the browser GUI (board, analysis overlay, training dashboard).
+// httplib.h must come first on Windows (winsock2.h before any windows.h).
+#include "httplib.h"
 #include "server/server.h"
 
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-#include "httplib.h"
 #include "nn/model.h"
 #include "util/log.h"
 

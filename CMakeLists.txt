@@ -122,6 +122,8 @@ if(GO9_BUILD_TESTS)
   target_link_libraries(go9_tests PRIVATE go9_engine)
   add_test(NAME go9_tests COMMAND go9_tests)
 
+  add_test(NAME rules_selftest COMMAND go9 selftest)
+
   add_executable(go9_crossval tests/crossval_main.cpp)
   target_link_libraries(go9_crossval PRIVATE go9_core)
   if(EXISTS ${CMAKE_SOURCE_DIR}/tests/data/openspiel_games.txt)

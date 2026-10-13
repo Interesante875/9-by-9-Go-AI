@@ -37,6 +37,9 @@ class CsvWriter {
 };
 
 std::string timestamp();
+// Atomically replaces `dst` with `tmp` (rename). Retries for a moment because on Windows a file
+// that another process is reading cannot be replaced; falls back to copying. Returns success.
+bool replace_file(const std::string& tmp, const std::string& dst);
 std::string format(const char* fmt, ...);
 
 }  // namespace util

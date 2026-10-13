@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -76,8 +77,7 @@ void Trainer::write_state() const {
       << "elo=" << elo_ << "\n"
       << "train_hours=" << train_hours_ << "\n";
   out.close();
-  std::error_code ec;
-  fs::rename(path("state.txt.tmp"), path("state.txt"), ec);
+  util::replace_file(path("state.txt.tmp"), path("state.txt"));
 }
 
 bool Trainer::read_state() {
@@ -108,8 +108,8 @@ void Trainer::save_checkpoint(bool with_replay) {
     torch::serialize::OutputArchive ar;
     opt_->save(ar);
     ar.save_to(path("optimizer_latest.pt.tmp"));
-    std::error_code ec;
-    fs::rename(path("optimizer_latest.pt.tmp"), path("optimizer_latest.pt"), ec);
+    if (!util::replace_file(path("optimizer_latest.pt.tmp"), path("optimizer_latest.pt")))
+      log_warn("could not write optimizer_latest.pt");
   }
   if (with_replay && !replay_->save(path("replay.bin"))) log_warn("failed to save replay buffer");
   write_state();
@@ -325,6 +325,7 @@ int Trainer::run(std::atomic<bool>* stop) {
 
     // 1) Self-play
     SelfPlayStats sp;
+    selfplay.set_resign_enabled(iter_ >= cfg_.resign_start_iter);
     auto games = selfplay.play(cfg_.games_per_iter, uint64_t(cfg_.seed) * 7777 + uint64_t(iter_) * 104729, stop, &sp);
     if (stop && stop->load()) break;  // incomplete iteration: discard, checkpoint below
     int new_samples = 0;

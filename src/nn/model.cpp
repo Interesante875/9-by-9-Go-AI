@@ -1,5 +1,7 @@
 #include "nn/model.h"
 
+#include "util/log.h"
+
 #include <filesystem>
 #include <stdexcept>
 
@@ -111,7 +113,7 @@ void save_model(GoNet& net, const std::string& path) {
   // Write to a temp file then rename so an interrupted save never corrupts the model.
   const std::string tmp = path + ".tmp";
   archive.save_to(tmp);
-  std::filesystem::rename(tmp, path);
+  if (!util::replace_file(tmp, path)) throw std::runtime_error("could not write " + path);
 }
 
 NetConfig read_model_config(const std::string& path) {

@@ -41,6 +41,7 @@ class SelfPlay {
   SelfPlay(const TrainConfig& cfg, std::shared_ptr<nn::Evaluator> eval);
   // Plays `n` games (MCTS self-play, or raw-policy rollouts when algo == "ppo").
   std::vector<GameResult> play(int n, uint64_t seed, const std::atomic<bool>* stop, SelfPlayStats* stats);
+  void set_resign_enabled(bool on) { resign_enabled_ = on; }
 
  private:
   void worker_mcts(int thread_id, int n, uint64_t seed, const std::atomic<bool>* stop,
@@ -50,6 +51,7 @@ class SelfPlay {
 
   TrainConfig cfg_;
   std::shared_ptr<nn::Evaluator> eval_;
+  bool resign_enabled_ = true;
 };
 
 // Per-move record collected during a game, turned into Samples at the end.

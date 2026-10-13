@@ -1,6 +1,9 @@
 #include "gtp/gtp.h"
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
+#include <cstdlib>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -21,7 +24,7 @@ std::string lower(std::string s) {
 
 const char* kCommands[] = {"protocol_version", "name", "version", "known_command", "list_commands", "quit",
                            "boardsize", "clear_board", "komi", "play", "genmove", "undo", "showboard",
-                           "final_score", "set_free_handicap", "lz-analyze", "kata-analyze", "lz-genmove_analyze",
+                           "final_score", "lz-analyze", "kata-analyze", "lz-genmove_analyze",
                            "kata-genmove_analyze", "go9-visits", "printsgf"};
 
 // Formats one analysis snapshot as an "info ..." line (Leela Zero or KataGo flavour).

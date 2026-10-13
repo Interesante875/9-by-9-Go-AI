@@ -1,5 +1,7 @@
 #include "train/replay.h"
 
+#include "util/log.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -100,9 +102,7 @@ bool ReplayBuffer::save(const std::string& path) const {
   }
   ok = (std::fclose(f) == 0) && ok;
   if (!ok) return false;
-  std::error_code ec;
-  std::filesystem::rename(tmp, path, ec);
-  return !ec;
+  return util::replace_file(tmp, path);
 }
 
 bool ReplayBuffer::load(const std::string& path) {

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>go9 · 9×9 Go AI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo"><i></i><i></i></span> go9 <small>9×9 Go · self-play RL</small></div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="play">Play &amp; Analyze</button>
+    <button class="tab" data-tab="train">Training</button>
+  </nav>
+  <div class="model-chip" id="modelChip" title="Loaded network">model: …</div>
+</header>
+
+<main id="tab-play" class="tabpane active">
+  <section class="board-col">
+    <div class="board-wrap">
+      <canvas id="board" aria-label="Go board"></canvas>
+      <div class="thinking" id="thinking"><span class="spinner"></span> <span id="thinkingText">AI is thinking…</span></div>
+    </div>
+    <div class="graph-card card">
+      <div class="card-title">Win rate (Black) <span class="muted" id="graphInfo"></span></div>
+      <canvas id="wrgraph"></canvas>
+    </div>
+  </section>
+
+  <aside class="side-col">
+    <div class="card players">
+      <div class="player" id="pBlack">
+        <div class="stone-icon black"></div>
+        <div class="pinfo">
+          <div class="pname">Black</div>
+          <div class="pcaps">captures <b id="capB">0</b></div>
+        </div>
+        <select id="ctrlBlack" class="ctrl">
+          <option value="human" selected>Human</option>
+          <option value="ai">AI</option>
+        </select>
+      </div>
+      <div class="player" id="pWhite">
+        <div class="stone-icon white"></div>
+        <div class="pinfo">
+          <div class="pname">White <span class="muted" id="komiLabel">+7 komi</span></div>
+          <div class="pcaps">captures <b id="capW">0</b></div>
+        </div>
+        <select id="ctrlWhite" class="ctrl">
+          <option value="human">Human</option>
+          <option value="ai" selected>AI</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card evalcard">
+      <div class="evalbar"><div class="evalfill" id="evalFill"></div><span class="evalmid"></span></div>
+      <div class="evaltext">
+        <span id="evalWinrate">Black 50.0%</span>
+        <span id="evalScore" class="muted">B+0.0</span>
+        <span id="evalVisits" class="muted"></span>
+      </div>
+      <div class="status" id="status">Black to play</div>
+    </div>
+
+    <div class="card controls">
+      <div class="btnrow">
+        <button id="btnPass" title="Pass (P)">Pass</button>
+        <button id="btnUndo" title="Undo (U)">Undo</button>
+        <button id="btnAI" title="Let the AI play this move (Space)">AI move</button>
+        <button id="btnResign" class="danger">Resign</button>
+      </div>
+      <div class="btnrow">
+        <button id="btnAnalyze" class="toggle" title="Continuous analysis (A)">▶ Analyze</button>
+        <button id="btnNew" class="primary">New game</button>
+        <label class="komi">komi <input id="komiInput" type="number" step="0.5" value="7"></label>
+      </div>
+      <div class="slider">
+        <label for="visits">AI strength <b id="visitsLabel">400</b> visits</label>
+        <input id="visits" type="range" min="1" max="12" step="1" value="7">
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="optCand" checked> Candidate moves</label>
+        <label><input type="checkbox" id="optOwn"> Territory</label>
+        <label><input type="checkbox" id="optPolicy"> Policy heatmap</label>
+        <label><input type="checkbox" id="optNums"> Move numbers</label>
+        <label><input type="checkbox" id="optScore"> Show score lead</label>
+        <label><input type="checkbox" id="optCoords" checked> Coordinates</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Top moves <span class="muted">(hover to preview variation)</span></div>
+      <table class="movetable">
+        <thead><tr><th>#</th><th>Move</th><th>Win%</th><th>Lead</th><th>Visits</th><th>Prior</th><th>Variation</th></tr></thead>
+        <tbody id="moveRows"><tr><td colspan="7" class="muted">Press “Analyze” or let the AI move.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card files">
+      <button id="btnSgf">Download SGF</button>
+      <label class="filebtn">Open SGF<input type="file" id="sgfFile" accept=".sgf"></label>
+      <button id="btnReload" title="Reload the latest checkpoint (e.g. while training runs)">Reload model</button>
+    </div>
+    <div class="hint muted">Keys: <b>P</b> pass · <b>U</b> undo · <b>A</b> analyze · <b>Space</b> AI move</div>
+  </aside>
+</main>
+
+<main id="tab-train" class="tabpane">
+  <div class="train-head">
+    <div>
+      <h2>Training progress</h2>
+      <div class="muted" id="trainInfo">Start the GUI with <code>--run &lt;run_dir&gt;</code> to see live training curves.</div>
+    </div>
+    <div class="train-ctrl">
+      <label><input type="checkbox" id="optSmooth" checked> Smooth</label>
+      <label><input type="checkbox" id="optAuto" checked> Auto-refresh</label>
+      <button id="btnRefresh">Refresh</button>
+    </div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="charts">
+    <div class="card chart"><div class="card-title">Total loss</div><canvas data-chart="total"></canvas></div>
+    <div class="card chart"><div class="card-title">Policy loss (cross-entropy vs MCTS) &amp; KL</div><canvas data-chart="policy"></canvas></div>
+    <div class="card chart"><div class="card-title">Value / ownership / score loss</div><canvas data-chart="value"></canvas></div>
+    <div class="card chart"><div class="card-title">PPO surrogate &amp; policy entropy</div><canvas data-chart="ppo"></canvas></div>
+    <div class="card chart"><div class="card-title">Elo (vs previous checkpoints)</div><canvas data-chart="elo"></canvas></div>
+    <div class="card chart"><div class="card-title">Self-play: game length &amp; Black win rate</div><canvas data-chart="games"></canvas></div>
+    <div class="card chart"><div class="card-title">Replay buffer &amp; learning rate</div><canvas data-chart="buffer"></canvas></div>
+    <div class="card chart"><div class="card-title">Throughput (NN evals / s)</div><canvas data-chart="speed"></canvas></div>
+  </div>
+  <div class="card logcard">
+    <div class="card-title">train.log (tail)</div>
+    <pre id="trainLog" class="log"></pre>
+  </div>
+</main>
+
+<script src="charts.js"></script>
+<script src="board.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

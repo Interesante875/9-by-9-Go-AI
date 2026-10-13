@@ -6,6 +6,7 @@
 #include <ctime>
 #include <filesystem>
 #include <iostream>
+#include <thread>
 
 namespace util {
 
@@ -28,6 +29,19 @@ void Logger::write(const std::string& level, const std::string& msg) {
   std::string line = "[" + timestamp() + "] " + level + " " + msg;
   std::cout << line << std::endl;
   if (file_.is_open()) file_ << line << std::endl;
+}
+
+bool replace_file(const std::string& tmp, const std::string& dst) {
+  std::error_code ec;
+  for (int attempt = 0; attempt < 20; ++attempt) {
+    std::filesystem::rename(tmp, dst, ec);
+    if (!ec) return true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  std::filesystem::copy_file(tmp, dst, std::filesystem::copy_options::overwrite_existing, ec);
+  std::error_code ec2;
+  std::filesystem::remove(tmp, ec2);
+  return !ec;
 }
 
 std::string timestamp() {

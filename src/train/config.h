@@ -43,6 +43,8 @@ struct TrainConfig {
   float resign_threshold = -0.92f;  // resign when root value < threshold (0 disables)
   float noresign_frac = 0.2f;       // fraction of games that never resign (calibration)
   int resign_min_moves = 20;
+  int resign_start_iter = 30;       // no resignation before the value head has learnt something
+  int resign_consecutive = 3;       // value must stay below the threshold for N of the player's moves
   int leaves_per_search = 2;        // virtual-loss leaves gathered per game per batch
 
   // Optimisation
@@ -91,6 +93,7 @@ struct TrainConfig {
   // Parses ["--key", "value", "--key2=value2", ...]
   bool apply_args(const std::vector<std::string>& args, std::string* error);
   std::string summary() const;
+  std::string dump() const;  // config-file text
 };
 
 }  // namespace train
