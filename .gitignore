@@ -1,0 +1,8 @@
+build/
+build-*/
+out/
+runs/
+libtorch/
+.vs/
+*.pt.tmp
+__pycache__/
