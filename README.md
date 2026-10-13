@@ -300,4 +300,5 @@ Open-source building blocks: **LibTorch** (BSD), **cpp-httplib** (MIT, vendored)
 * **Port in use**: `go9 gui --port 8090`.
 * **Out of GPU memory**: lower `parallel_games` or `batch_size`.
 * **Training seems slow on CPU**: use `configs/cpu.ini` and a smaller network. CPU training works but is ~10–50× slower than a GPU.
+* **Everything gets very slow when two go9 processes share the CPU** (for example training on the CPU while the GUI analyses on the CPU): each process spins a full set of LibTorch/OpenMP threads, and oversubscribed CPUs slow down dramatically. Give the second process fewer threads, e.g. `go9 gui --run runs\main --threads 1`, or set `--torch_threads` for training. GPU training is not affected.
 * **Changing the network size of an existing run** is not possible. Start a new `--run_dir`.

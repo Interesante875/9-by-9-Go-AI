@@ -71,7 +71,7 @@ struct TrainConfig {
   float w_value = 1.0f;
   float w_ownership = 0.5f;
   float w_score = 0.1f;
-  float w_ppo = 0.5f;      // PPO clipped surrogate weight (hybrid / ppo)
+  float w_ppo = 0.25f;     // PPO clipped surrogate weight (hybrid; configs/ppo.ini uses 1.0)
   float w_entropy = 0.0f;  // entropy bonus
   float ppo_clip = 0.2f;
   float gae_lambda = 0.95f;

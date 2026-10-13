@@ -156,10 +156,11 @@ function renderMoveTable() {
   });
   if (note) rows.unshift(`<tr><td colspan="7" class="muted">${note}</td></tr>`);
   tb.innerHTML = rows.join("");
+  // The rows are rebuilt on every analysis update, so "leave" is tracked on the persistent tbody.
+  tb.onmouseleave = () => board.setPV(null);
   tb.querySelectorAll("tr[data-i]").forEach((tr) => {
     const m = an.moves[Number(tr.dataset.i)];
     tr.addEventListener("mouseenter", () => { if (an === board.analysis) board.setPV(m.pv); });
-    tr.addEventListener("mouseleave", () => board.setPV(null));
     tr.addEventListener("click", () => { if (an === board.analysis) humanPlay(m.a); });
   });
 }
@@ -185,6 +186,7 @@ function setState(s, an = undefined) {
   state = s;
   if (an !== undefined) analysis = an;
   else if (moved) analysis = null;
+  if (moved) board.pv = null;
   render();
   if (moved) setTimeout(maybeAIMove, controller(1) === "ai" && controller(2) === "ai" ? 250 : 30);
 }

@@ -83,7 +83,7 @@ class BoardView {
 
   geometry() {
     const size = this.canvas.width;
-    const marginCells = this.opts.coords ? 0.95 : 0.6;
+    const marginCells = this.opts.coords ? 1.08 : 0.62;
     const cell = size / (N - 1 + 2 * marginCells);
     const origin = marginCells * cell;
     return { size, cell, origin };
@@ -237,10 +237,10 @@ class BoardView {
       ctx.textBaseline = "middle";
       for (let i = 0; i < N; i++) {
         const p = origin + i * cell;
-        ctx.fillText(COLS[i], p, origin * 0.42);
-        ctx.fillText(COLS[i], p, size - origin * 0.42);
-        ctx.fillText(String(N - i), origin * 0.42, p);
-        ctx.fillText(String(N - i), size - origin * 0.42, p);
+        ctx.fillText(COLS[i], p, origin * 0.36);
+        ctx.fillText(COLS[i], p, size - origin * 0.36);
+        ctx.fillText(String(N - i), origin * 0.36, p);
+        ctx.fillText(String(N - i), size - origin * 0.36, p);
       }
     }
     const s = this.state;
@@ -370,7 +370,7 @@ class BoardView {
         ctx.font = `700 ${Math.round(cell * 0.3)}px "Segoe UI", system-ui, sans-serif`;
         ctx.fillStyle = "rgba(10,60,90,0.9)";
         ctx.textAlign = "center";
-        ctx.fillText(`AI suggests PASS (${(an.moves[0].winrate * 100).toFixed(1)}%)`, size / 2, origin * 0.42 + (this.opts.coords ? cell * 0.35 : 0));
+        ctx.fillText(`AI suggests PASS (${(an.moves[0].winrate * 100).toFixed(1)}%)`, size / 2, origin * 0.36 + (this.opts.coords ? cell * 0.35 : 0));
       }
     }
 

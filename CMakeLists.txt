@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(go9 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)  # recent LibTorch releases require C++20
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
@@ -56,6 +54,24 @@ if(MSVC)
 else()
   add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 endif()
+
+# C++ standard: recent LibTorch releases require C++20, older ones (e.g. 2.7 on Windows) are built
+# with C++17. Pick automatically from the LibTorch headers unless GO9_CXX_STANDARD is given.
+set(GO9_CXX_STANDARD "" CACHE STRING "C++ standard (17 or 20); empty = detect from LibTorch")
+if(NOT GO9_CXX_STANDARD)
+  set(GO9_CXX_STANDARD 17)
+  set(_go9_torch_all "${TORCH_INSTALL_PREFIX}/include/torch/csrc/api/include/torch/all.h")
+  if(EXISTS "${_go9_torch_all}")
+    file(READ "${_go9_torch_all}" _go9_all)
+    string(FIND "${_go9_all}" "C++20" _go9_pos)
+    if(_go9_pos GREATER -1)
+      set(GO9_CXX_STANDARD 20)
+    endif()
+  endif()
+endif()
+message(STATUS "go9: using C++${GO9_CXX_STANDARD}")
+set(CMAKE_CXX_STANDARD ${GO9_CXX_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---------------------------------------------------------------- core (no torch)
 add_library(go9_core STATIC
