@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "go9py"
+version = "1.0.0"
+description = "9x9 Go environment, self-play reinforcement learning (PyTorch: MCTS + PPO + prioritized replay) and a KataGo-style browser GUI"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.22", "torch>=2.0"]
+
+[project.optional-dependencies]
+plot = ["matplotlib"]
+gym = ["gymnasium"]
+test = ["pytest"]
+
+[project.scripts]
+go9py = "go9py.__main__:main"
+
+[tool.setuptools]
+packages = ["go9py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

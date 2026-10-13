@@ -9,6 +9,8 @@ go9 is a complete, self-contained 9×9 Go system:
 * **Checkpoint & resume**: model, optimizer, replay buffer and counters are saved. Stop with Ctrl+C at any time and continue later, for as long as you like.
 * Builds and trains on **Windows** (Visual Studio + NVIDIA GPU or CPU). Linux and macOS work too.
 
+> **Prefer Python?** The [`python/`](python/README.md) folder contains **go9py**, a pure Python + PyTorch version with the same environment, training (MCTS + PPO + prioritized replay, resume, Elo), GUI, terminal play and GTP. There is nothing to compile: `pip install torch numpy`, then `python -m go9py gui`. It is slower than the C++ version.
+
 ![GUI](docs/images/gui_play.png)
 
 ---

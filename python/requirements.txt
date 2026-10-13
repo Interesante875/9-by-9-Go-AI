@@ -1,0 +1,4 @@
+numpy>=1.22
+torch>=2.0
+matplotlib   # optional: tools/plot_training.py
+pytest       # optional: tests

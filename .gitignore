@@ -6,3 +6,4 @@ libtorch/
 .vs/
 *.pt.tmp
 __pycache__/
+.venv/
