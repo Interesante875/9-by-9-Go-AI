@@ -110,6 +110,27 @@ TEST(mcts_root_noise_changes_priors_only_at_root) {
   for (auto& e : s.root().edges) CHECK_EQ(e.prior, e.prior_raw);
 }
 
+TEST(tt_safe_pass) {
+  // Black is far behind on the current area count (komi 100): a PASS choice is replaced by a move.
+  Board b(100.0f);
+  b.play(gtp_to_action("E5"));
+  b.play(PASS);
+  mcts::Config cfg;
+  mcts::Search s(cfg, b, 5);
+  run_uniform(s, 200);
+  int m = mcts::tt_safe_move(s, PASS);
+  CHECK(m != PASS);
+  CHECK(b.is_legal(m));
+  // Ahead on the count: passing is allowed.
+  Board w(7.0f);
+  w.play(gtp_to_action("E5"));
+  w.play(PASS);
+  mcts::Search s2(cfg, w, 5);
+  run_uniform(s2, 50);
+  CHECK_EQ(mcts::tt_safe_move(s2, PASS), PASS);
+  CHECK_EQ(mcts::tt_safe_move(s2, gtp_to_action("A1")), gtp_to_action("A1"));
+}
+
 TEST(mcts_finished_game_root) {
   Board b;
   b.play(PASS);

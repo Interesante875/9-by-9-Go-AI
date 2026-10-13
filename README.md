@@ -119,7 +119,7 @@ The classic `-DCMAKE_PREFIX_PATH=<libtorch>` (`find_package(Torch)`) also works.
 * *score*: expected final score lead,
 * *ownership*: who will own each point. This is an auxiliary target that speeds up learning a lot (KataGo), and it powers the territory overlay in the GUI.
 
-Input: 19 feature planes (stones for the last 4 positions, liberties 1/2/3+, legal moves, last move, side to move, komi).
+Input: 20 feature planes (stones for the last 4 positions, liberties 1/2/3+, legal moves, last move, side to move, komi, "opponent just passed").
 
 **Search** (`src/mcts/mcts.cpp`): PUCT MCTS with batched leaf evaluation (virtual loss), first-play urgency, Dirichlet root noise in self-play, subtree reuse, and exact scoring of finished games.
 
@@ -208,7 +208,9 @@ Keyboard: `P` pass · `U` undo · `A` analyze · `Space` AI move.
 
 ![Training dashboard](docs/images/gui_train.png)
 
-Scoring follows **area (Chinese / Tromp-Taylor) rules**. After two passes, every stone on the board counts as alive. Capture dead stones before passing, or turn on *Territory* to see what the network thinks is dead. The AI understands this rule and will not pass while dead stones would cost it the game.
+Scoring follows **area (Chinese / Tromp-Taylor) rules**. After two passes, every stone on the board counts as alive. Capture dead stones before passing, or turn on *Territory* to see what the network thinks is dead.
+
+The AI follows a *Tromp-Taylor-safe pass* rule, both in play and in self-play: it passes only when the board as it stands is a win for it. Otherwise it keeps playing (capturing invaders) instead of passing into a loss.
 
 ---
 

@@ -131,7 +131,7 @@ int PlayEngine::choose_move(int visits, bool allow_resign, Analysis* out) {
   search_->set_root_noise(false);
   search_->run(*eval_, std::max(1, visits), 16);
   Analysis a = make_analysis();
-  int move = search_->best_move();
+  int move = mcts::tt_safe_move(*search_, search_->best_move());
   const float my_wr = a.to_move == BLACK ? a.winrate_black : 1.f - a.winrate_black;
   if (allow_resign && env_.board().move_number() > 30 && a.visits >= 50 && my_wr < 0.03f) move = -2;
   if (out) *out = a;

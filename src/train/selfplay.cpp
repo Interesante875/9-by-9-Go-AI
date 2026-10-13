@@ -219,7 +219,8 @@ void SelfPlay::worker_mcts(int thread_id, int n, uint64_t seed, const std::atomi
       r.root_q = rv;
       r.nn_value = root.nn_value;
       const float temp = s.board.move_number() < cfg_.temp_moves ? cfg_.temperature : 0.f;
-      int action = s.search->sample_move(temp);
+      // Area-scoring cleanup: no passing while the current count loses (dead stones must be captured).
+      int action = mcts::tt_safe_move(*s.search, s.search->sample_move(temp));
       r.action = action;
       float prior = 1e-6f;
       for (auto& e : root.edges)

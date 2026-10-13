@@ -125,7 +125,7 @@ MatchResult play_match(std::shared_ptr<nn::Evaluator> a, std::shared_ptr<nn::Eva
         action = int(std::max_element(e.policy.begin(), e.policy.end()) - e.policy.begin());
       } else {
         float t = int(s->moves.size()) < cfg.temp_moves ? cfg.temperature : 0.f;
-        action = s->search[p]->sample_move(t);
+        action = mcts::tt_safe_move(*s->search[p], s->search[p]->sample_move(t));
       }
       if (!s->board.play(action)) {
         action = PASS;

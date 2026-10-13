@@ -16,7 +16,8 @@ namespace nn {
 //   16     ones (marks the on-board area for zero-padded convolutions)
 //   17     1 if Black to move
 //   18     komi from the mover's point of view / 15
-constexpr int kInputPlanes = 19;
+//   19     1 if the opponent's last move was a pass (passing now would end the game)
+constexpr int kInputPlanes = 20;
 constexpr int kInputSize = kInputPlanes * go::NN;
 
 // Symmetry s in [0, 8): maps an on-board action through rotation/reflection.

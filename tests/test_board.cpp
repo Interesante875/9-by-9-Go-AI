@@ -276,6 +276,11 @@ TEST(feature_encoding) {
   CHECK_EQ(f0[15 * NN + A("C3")], 1.f);  // last move
   CHECK_EQ(f0[17 * NN], 0.f);           // white to move
   CHECK_NEAR(f0[18 * NN], 7.0 / 15.0, 1e-6);
+  CHECK_EQ(f0[19 * NN], 0.f);  // last move was not a pass
+  b.play(PASS);
+  std::vector<float> fp(nn::kInputSize);
+  nn::encode(b.snapshot(), 0, fp.data());
+  CHECK_EQ(fp[19 * NN + 40], 1.f);
   // Every symmetry is a permutation of the identity encoding.
   for (int s = 0; s < 8; ++s) {
     nn::encode(snap, s, fs.data());

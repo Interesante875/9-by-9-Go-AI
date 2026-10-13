@@ -107,6 +107,14 @@ class Search {
   std::mt19937_64 rng_;
 };
 
+// Tromp-Taylor-safe move choice. Under area scoring every stone left on the board counts, so
+// passing is only safe if the position as it stands is a win for the player to move. If the
+// search picked PASS but the current area count loses (e.g. opponent stones that should be
+// captured are still inside our territory), play the most-visited non-pass move instead
+// (never filling one of our own single-point eyes). Prevents "passing into a loss" against
+// opponents who keep playing, such as humans or random players.
+int tt_safe_move(const Search& search, int chosen);
+
 // Value/score of a finished game from the perspective of the player to move.
 void terminal_eval(const go::Board& b, float* value, float* score);
 

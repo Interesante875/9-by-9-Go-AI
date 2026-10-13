@@ -196,6 +196,31 @@ void Search::run(nn::Evaluator& eval, int visits, int batch) {
   }
 }
 
+int tt_safe_move(const Search& search, int chosen) {
+  if (chosen != PASS) return chosen;
+  const Board& b = search.root_board();
+  float v, s;
+  terminal_eval(b, &v, &s);  // score of the board as it stands, for the player to move
+  if (s > 0) return PASS;
+  const Color me = b.to_move();
+  int best = PASS, best_n = 0;
+  for (auto& e : search.root().edges) {
+    if (e.move == PASS || !e.child || e.child->n <= best_n) continue;
+    // Skip filling our own single-point eye.
+    const int x = e.move % N, y = e.move / N;
+    bool own_eye = true;
+    const int dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+    for (int d = 0; d < 4; ++d) {
+      int nx = x + dx[d], ny = y + dy[d];
+      if (nx >= 0 && ny >= 0 && nx < N && ny < N && b.at(nx, ny) != me) own_eye = false;
+    }
+    if (own_eye) continue;
+    best = e.move;
+    best_n = e.child->n;
+  }
+  return best;
+}
+
 std::array<float, NUM_ACTIONS> Search::visit_policy() const {
   std::array<float, NUM_ACTIONS> pi{};
   double total = 0;

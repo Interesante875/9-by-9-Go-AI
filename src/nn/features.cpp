@@ -123,10 +123,13 @@ void encode(const Snapshot& snap, int sym, float* out) {
   float* black = plane(17);
   float* komi = plane(18);
   const float k = (own == WHITE ? snap.komi : -snap.komi) / 15.f;
+  float* passed = plane(19);
+  const float p = snap.last_move == PASS ? 1.f : 0.f;
   for (int a = 0; a < NN; ++a) {
     ones[a] = 1.f;
     black[a] = own == BLACK ? 1.f : 0.f;
     komi[a] = k;
+    passed[a] = p;
   }
 }
 
